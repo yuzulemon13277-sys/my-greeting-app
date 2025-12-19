@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>れんしゅう</title>
+</head>
+<body>
+    <style>
+        body {
+        /* 1. 画面の横方向の真ん中に寄せる */
+        text-align: center;
+        
+        /* 2. 上に少し余裕を持たせる（お好みで） */
+        padding-top: 50px;
+        
+        /* 3. 背景色もおしゃれに（例：薄いグレー） */
+        background-color: #f9f9f9;
+        
+        /* 4. フォントを読みやすく */
+        font-family: sans-serif;
+    }
+
+    input[type="text"] {
+    width: 250px;      /* 横幅を少し広げる */
+    padding: 12px;     /* 中にゆとりを持たせる */
+    font-size: 16px;   /* 文字を打ちやすく */
+    border: 1px solid #ddd;
+    border-radius: 8px; /* 角を丸く */
+}
+
+    /* ボタン全体のデザイン */
+    button {
+        background-color: #23921f; /* 緑色 */
+        color: white;              /* 文字を白に */
+        padding: 30px 50px;        /* 内側の余白（上下 左右） */
+        border: none;              /* 枠線を消す */
+        border-radius: 10px;        /* 角を丸くする */
+        cursor: pointer;           /* マウスを乗せた時に指マークにする */
+        font-size: 32px;           /* 文字の大きさ */
+    }
+
+    /* ボタンにマウスを乗せた時（ホバー）の変化 */
+    button:hover {
+        background-color: #266630; /* 少し暗い緑にする */
+    }
+</style>
+    <style>
+        /* body（全体）の背景色を「薄い緑」にする設定 */
+        body {
+            background-color: #f2e0e0; 
+        }
+
+        /* ついでにh1の文字色を「ネイビー」にする、なんてこともできます */
+        h1 {
+            color: rgb(163, 172, 252);
+        }
+    </style>
+    
+    <h1>はじめの文章</h1>
+    <p>ここに文章を書きます</p>
+
+    <script>
+        console.log("こんにちは")
+    </script>
+</body>
+<h1>挨拶アプリ</h1>
+<input type="text" id="nameinput" placeholder="名前を入力してね">
+<button onclick="sayHello()">挨拶をする</button>
+<p id="message">ここに結果が出ます</p>
+
+<script>
+function sayHello() {
+
+    // 1. 入力欄（id="nameinput"）から文字を取得して、nameという箱に入れる
+    const name = document.getElementById("nameinput").value;
+
+    // 2. もし名前が空っぽ（""）だったら
+    if (name === "") {
+        // メッセージを表示する場所に警告を出す
+        document.getElementById("message").innerText = "名前を入力してね！";
+    } else {
+        // 3. 名前が入っていたら、挨拶を表示する
+        document.getElementById("message").innerText = name + "さん、こんにちは！";
+    }
+    // 【追加】文字の色を赤色にする
+    document.getElementById("message").style.color = "red";
+    // 【追加】文字のサイズを大きくする
+    document.getElementById("message").style.fontSize = "30px";
+}
+
+// 入力欄（nameinput）でキーが押されたかチェックする
+document.getElementById("nameinput").addEventListener("keypress", function(event) {
+    // もし押されたキーが「Enter」だったら
+    if (event.key === "Enter") {
+        // ボタンをクリックした時と同じ命令（sayHello）を実行する
+        sayHello();
+    }
+});
+
+</script>
+</html>
