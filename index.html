@@ -2,100 +2,144 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>れんしゅう</title>
-</head>
-<body>
+    <title>Night City Jumper - Left Facing</title>
     <style>
         body {
-        /* 1. 画面の横方向の真ん中に寄せる */
-        text-align: center;
-        
-        /* 2. 上に少し余裕を持たせる（お好みで） */
-        padding-top: 50px;
-        
-        /* 3. 背景色もおしゃれに（例：薄いグレー） */
-        background-color: #f9f9f9;
-        
-        /* 4. フォントを読みやすく */
-        font-family: sans-serif;
-    }
-
-    input[type="text"] {
-    width: 250px;      /* 横幅を少し広げる */
-    padding: 12px;     /* 中にゆとりを持たせる */
-    font-size: 16px;   /* 文字を打ちやすく */
-    border: 1px solid #ddd;
-    border-radius: 8px; /* 角を丸く */
-}
-
-    /* ボタン全体のデザイン */
-    button {
-        background-color: #23921f; /* 緑色 */
-        color: white;              /* 文字を白に */
-        padding: 30px 50px;        /* 内側の余白（上下 左右） */
-        border: none;              /* 枠線を消す */
-        border-radius: 10px;        /* 角を丸くする */
-        cursor: pointer;           /* マウスを乗せた時に指マークにする */
-        font-size: 32px;           /* 文字の大きさ */
-    }
-
-    /* ボタンにマウスを乗せた時（ホバー）の変化 */
-    button:hover {
-        background-color: #266630; /* 少し暗い緑にする */
-    }
-</style>
-    <style>
-        /* body（全体）の背景色を「薄い緑」にする設定 */
-        body {
-            background-color: #f2e0e0; 
+            margin: 0; padding: 0; display: flex; justify-content: center;
+            align-items: center; height: 100vh; background: #02040a;
+            color: white; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; user-select: none;
+        }
+        #game-container {
+            position: relative; width: 800px; height: 400px;
+            background: linear-gradient(to bottom, #000814 0%, #001d3d 100%);
+            border-bottom: 12px solid #222; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,245,212,0.2);
         }
 
-        /* ついでにh1の文字色を「ネイビー」にする、なんてこともできます */
-        h1 {
-            color: rgb(163, 172, 252);
+        .city-bg {
+            position: absolute; bottom: 0; width: 200%; height: 150px;
+            background: repeating-linear-gradient(90deg, #003566 0px, #003566 40px, transparent 40px, transparent 80px);
+            opacity: 0.3; z-index: 1;
         }
+
+        #player {
+            position: absolute; bottom: 0; left: 50px;
+            width: 40px; height: 40px; background: #00f5d4;
+            border-radius: 8px; box-shadow: 0 0 20px #00f5d4;
+            z-index: 10;
+        }
+        .invincible { background: #fff !important; box-shadow: 0 0 40px #fff, 0 0 60px #ffea00 !important; }
+
+        /* 障害物（左向きに変更） */
+        #obstacle { position: absolute; bottom: 0; z-index: 5; }
+        
+        /* 車のボディ：丸みを左側に、窓を左側に配置 */
+        .car-body { position: relative; width: 70px; height: 35px; background: #ff0055; border-radius: 20px 10px 5px 5px; }
+        .truck-body { position: relative; width: 80px; height: 90px; background: #ff8800; border-radius: 5px; }
+        
+        /* 窓の位置を左側に */
+        .window { position: absolute; top: 5px; left: 5px; width: 25px; height: 12px; background: #222; border-radius: 10px 2px 0 0; }
+        
+        /* タイヤ */
+        .tire { position: absolute; bottom: -8px; width: 15px; height: 15px; background: #111; border-radius: 50%; border: 2px solid #444; }
+        .tire-l { left: 8px; } .tire-r { right: 8px; }
+
+        #item {
+            position: absolute; bottom: 180px; width: 30px; height: 30px; background: #ffea00;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: 0 0 20px #ffea00; z-index: 5;
+        }
+
+        #score-board { position: absolute; top: 20px; left: 20px; font-size: 28px; font-weight: bold; color: #ffea00; z-index: 20; }
+        #speed-tag { font-size: 14px; color: #fff; margin-left: 10px; opacity: 0.7; }
     </style>
-    
-    <h1>はじめの文章</h1>
-    <p>ここに文章を書きます</p>
+</head>
+<body onmousedown="handleInput()">
+
+    <div id="game-container">
+        <div id="city" class="city-bg"></div>
+        <div id="score-board">SCORE: 0 <span id="speed-tag">Speed: 1</span> <span id="status" style="font-size: 16px; margin-left: 10px;"></span></div>
+        <div id="player"></div>
+        <div id="obstacle">
+            <div id="obs-body" class="car-body">
+                <div class="window"></div>
+                <div class="tire tire-l"></div>
+                <div class="tire tire-r"></div>
+            </div>
+        </div>
+        <div id="item"></div>
+    </div>
 
     <script>
-        console.log("こんにちは")
+        const player = document.getElementById("player");
+        const obstacle = document.getElementById("obstacle");
+        const obsBody = document.getElementById("obs-body");
+        const item = document.getElementById("item");
+        const city = document.getElementById("city");
+        const scoreBoard = document.getElementById("score-board");
+        const speedTag = document.getElementById("speed-tag");
+        const statusText = document.getElementById("status");
+
+        let gameActive = true, score = 0, speed = 7, pos = 0, vel = 0, grav = 1.6, jCount = 0, isInv = false;
+        let obsX = 800, itemX = 1500, cityX = 0, isTruck = false;
+
+        // キーボード操作対応
+        window.addEventListener("keydown", (e) => {
+            if (e.code === "Space") { handleInput(); e.preventDefault(); }
+        });
+
+        function handleInput() { if (gameActive && jCount < 2) { vel = 24; jCount++; } }
+
+        function update() {
+            if (!gameActive) return;
+
+            // 1. 物理計算
+            vel -= grav; pos += vel;
+            if (pos <= 0) { pos = 0; vel = 0; jCount = 0; }
+            player.style.bottom = pos + "px";
+            player.style.transform = `rotate(${pos * 2.5}deg)`;
+
+            // 2. 障害物移動
+            obsX -= speed;
+            if (obsX < -100) {
+                obsX = 800;
+                score++;
+                if (score > 0 && score % 10 === 0) speed += 2;
+                isTruck = Math.random() < 0.3;
+                obsBody.className = isTruck ? "truck-body" : "car-body";
+            }
+            obstacle.style.left = obsX + "px";
+
+            // 3. 背景移動
+            cityX -= speed * 0.5;
+            city.style.transform = `translateX(${(cityX % 80)}px)`;
+
+            // 4. アイテム移動
+            itemX -= speed;
+            if (itemX < -100) itemX = 2500 + Math.random() * 2000;
+            item.style.left = itemX + "px";
+
+            // 5. アイテム判定
+            if (itemX > 50 && itemX < 90 && Math.abs(pos - 180) < 50) {
+                isInv = true; player.classList.add("invincible"); statusText.innerText = "⚡MUTEKI⚡";
+                itemX = -500;
+                setTimeout(() => { isInv = false; player.classList.remove("invincible"); statusText.innerText = ""; }, 5000);
+            }
+
+            // 6. 衝突判定
+            let h = isTruck ? 90 : 35;
+            if (obsX > 40 && obsX < 110 && pos < h && !isInv) {
+                gameActive = false;
+                alert("GAME OVER!\nSCORE: " + score);
+                location.reload();
+            }
+
+            scoreBoard.childNodes[0].nodeValue = `SCORE: ${score}`;
+            speedTag.innerText = `Speed Level: ${Math.floor((speed - 7) / 2) + 1}`;
+            requestAnimationFrame(update);
+        }
+        update();
     </script>
 </body>
-<h1>挨拶アプリ</h1>
-<input type="text" id="nameinput" placeholder="名前を入力してね">
-<button onclick="sayHello()">挨拶をする</button>
-<p id="message">ここに結果が出ます</p>
-
-<script>
-function sayHello() {
-
-    // 1. 入力欄（id="nameinput"）から文字を取得して、nameという箱に入れる
-    const name = document.getElementById("nameinput").value;
-
-    // 2. もし名前が空っぽ（""）だったら
-    if (name === "") {
-        // メッセージを表示する場所に警告を出す
-        document.getElementById("message").innerText = "名前を入力してね！";
-    } else {
-        // 3. 名前が入っていたら、挨拶を表示する
-        document.getElementById("message").innerText = name + "さん、こんにちは！";
-    }
-    // 【追加】文字の色を赤色にする
-    document.getElementById("message").style.color = "red";
-    // 【追加】文字のサイズを大きくする
-    document.getElementById("message").style.fontSize = "30px";
-}
-
-// 入力欄（nameinput）でキーが押されたかチェックする
-document.getElementById("nameinput").addEventListener("keypress", function(event) {
-    // もし押されたキーが「Enter」だったら
-    if (event.key === "Enter") {
-        // ボタンをクリックした時と同じ命令（sayHello）を実行する
-        sayHello();
-    }
-});
-
-</script>
 </html>
