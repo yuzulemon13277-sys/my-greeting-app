@@ -2,16 +2,17 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Night City Jumper - Left Facing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Night City Jumper - Mobile Ready</title>
     <style>
         body {
             margin: 0; padding: 0; display: flex; justify-content: center;
             align-items: center; height: 100vh; background: #02040a;
             color: white; font-family: 'Segoe UI', sans-serif;
-            overflow: hidden; user-select: none;
+            overflow: hidden; touch-action: manipulation; /* スマホのダブルタップズームを防止 */
         }
         #game-container {
-            position: relative; width: 800px; height: 400px;
+            position: relative; width: 100%; max-width: 800px; height: 400px;
             background: linear-gradient(to bottom, #000814 0%, #001d3d 100%);
             border-bottom: 12px solid #222; overflow: hidden;
             box-shadow: 0 0 50px rgba(0,245,212,0.2);
@@ -31,17 +32,10 @@
         }
         .invincible { background: #fff !important; box-shadow: 0 0 40px #fff, 0 0 60px #ffea00 !important; }
 
-        /* 障害物（左向きに変更） */
         #obstacle { position: absolute; bottom: 0; z-index: 5; }
-        
-        /* 車のボディ：丸みを左側に、窓を左側に配置 */
         .car-body { position: relative; width: 70px; height: 35px; background: #ff0055; border-radius: 20px 10px 5px 5px; }
         .truck-body { position: relative; width: 80px; height: 90px; background: #ff8800; border-radius: 5px; }
-        
-        /* 窓の位置を左側に */
         .window { position: absolute; top: 5px; left: 5px; width: 25px; height: 12px; background: #222; border-radius: 10px 2px 0 0; }
-        
-        /* タイヤ */
         .tire { position: absolute; bottom: -8px; width: 15px; height: 15px; background: #111; border-radius: 50%; border: 2px solid #444; }
         .tire-l { left: 8px; } .tire-r { right: 8px; }
 
@@ -51,15 +45,19 @@
             box-shadow: 0 0 20px #ffea00; z-index: 5;
         }
 
-        #score-board { position: absolute; top: 20px; left: 20px; font-size: 28px; font-weight: bold; color: #ffea00; z-index: 20; }
-        #speed-tag { font-size: 14px; color: #fff; margin-left: 10px; opacity: 0.7; }
+        #ui-layer { position: absolute; top: 10px; left: 15px; z-index: 20; pointer-events: none; }
+        .score-text { font-size: 24px; font-weight: bold; color: #ffea00; margin: 0; }
+        .best-text { font-size: 14px; color: #fff; opacity: 0.6; margin: 0; }
     </style>
 </head>
-<body onmousedown="handleInput()">
+<body>
 
     <div id="game-container">
         <div id="city" class="city-bg"></div>
-        <div id="score-board">SCORE: 0 <span id="speed-tag">Speed: 1</span> <span id="status" style="font-size: 16px; margin-left: 10px;"></span></div>
+        <div id="ui-layer">
+            <p class="score-text">SCORE: <span id="score">0</span> <span id="status" style="font-size: 16px;"></span></p>
+            <p class="best-text">BEST: <span id="best">0</span> | Speed Lv: <span id="lv">1</span></p>
+        </div>
         <div id="player"></div>
         <div id="obstacle">
             <div id="obs-body" class="car-body">
@@ -77,14 +75,26 @@
         const obsBody = document.getElementById("obs-body");
         const item = document.getElementById("item");
         const city = document.getElementById("city");
-        const scoreBoard = document.getElementById("score-board");
-        const speedTag = document.getElementById("speed-tag");
+        const scoreDisplay = document.getElementById("score");
+        const bestDisplay = document.getElementById("best");
+        const lvDisplay = document.getElementById("lv");
         const statusText = document.getElementById("status");
 
         let gameActive = true, score = 0, speed = 7, pos = 0, vel = 0, grav = 1.6, jCount = 0, isInv = false;
         let obsX = 800, itemX = 1500, cityX = 0, isTruck = false;
 
-        // キーボード操作対応
+        // ハイスコアの読み込み
+        let highScore = localStorage.getItem("highScore") || 0;
+        bestDisplay.innerText = highScore;
+
+        // 【スマホ対応】画面タッチに反応させる
+        window.addEventListener("touchstart", (e) => {
+            handleInput();
+            // e.preventDefault(); // これを入れると他の操作ができなくなる場合があるので注意
+        }, { passive: false });
+
+        // パソコンのクリックとキーボード対応
+        window.addEventListener("mousedown", handleInput);
         window.addEventListener("keydown", (e) => {
             if (e.code === "Space") { handleInput(); e.preventDefault(); }
         });
@@ -131,12 +141,19 @@
             let h = isTruck ? 90 : 35;
             if (obsX > 40 && obsX < 110 && pos < h && !isInv) {
                 gameActive = false;
-                alert("GAME OVER!\nSCORE: " + score);
+                // ハイスコア更新
+                if (score > highScore) {
+                    localStorage.setItem("highScore", score);
+                    alert("NEW RECORD! 🎉\nSCORE: " + score);
+                } else {
+                    alert("GAME OVER!\nSCORE: " + score);
+                }
                 location.reload();
             }
 
-            scoreBoard.childNodes[0].nodeValue = `SCORE: ${score}`;
-            speedTag.innerText = `Speed Level: ${Math.floor((speed - 7) / 2) + 1}`;
+            // UI更新
+            scoreDisplay.innerText = score;
+            lvDisplay.innerText = Math.floor((speed - 7) / 2) + 1;
             requestAnimationFrame(update);
         }
         update();
