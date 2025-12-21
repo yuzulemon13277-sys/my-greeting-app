@@ -2,64 +2,54 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survival Escape - Stylish Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Survival Escape - Definitive Edition</title>
     <style>
-        body { margin: 0; background: #050508; color: white; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { 
+            margin: 0; background: #050508; color: white; overflow: hidden; 
+            font-family: 'Segoe UI', Roboto, sans-serif; touch-action: none; user-select: none;
+        }
         canvas { display: block; }
         
-        /* 全体的にネオン感をプラス */
         .overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             display: flex; flex-direction: column; align-items: center; 
             background: radial-gradient(circle at center, rgba(10, 20, 40, 0.8) 0%, rgba(5, 5, 10, 0.95) 100%);
-            z-index: 10; overflow-y: auto; padding: 40px 0;
-            backdrop-filter: blur(8px);
+            z-index: 10; overflow-y: auto; padding: 40px 0; backdrop-filter: blur(8px);
         }
         
-        h1 { font-size: 50px; font-weight: 900; letter-spacing: 5px; color: #00ffcc; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
-        .best-score-label { color: #ffcc00; font-size: 18px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
+        h1 { font-size: clamp(30px, 8vw, 50px); font-weight: 900; letter-spacing: 5px; color: #00ffcc; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
+        .best-score-label { color: #ffcc00; font-size: 16px; margin-bottom: 30px; letter-spacing: 2px; }
         
         .board { 
-            width: 460px; background: rgba(255, 255, 255, 0.03); 
-            padding: 25px; border-radius: 20px; margin-bottom: 25px; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%; max-width: 460px; background: rgba(255, 255, 255, 0.03); 
+            padding: 20px; border-radius: 20px; margin-bottom: 25px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); box-sizing: border-box;
         }
 
         input { 
-            padding: 15px; font-size: 18px; border-radius: 12px; 
-            border: 1px solid #333; background: rgba(0,0,0,0.5); color: #fff; 
-            margin-bottom: 20px; width: 300px; text-align: center;
-            transition: 0.3s;
+            padding: 12px; font-size: 16px; border-radius: 12px; border: 1px solid #333; 
+            background: rgba(0,0,0,0.5); color: #fff; margin-bottom: 20px; width: 80%; text-align: center;
         }
-        input:focus { border-color: #00ffcc; outline: none; box-shadow: 0 0 15px rgba(0,255,204,0.3); }
 
         button { 
-            padding: 16px 50px; font-size: 18px; cursor: pointer; 
+            padding: 14px 40px; font-size: 18px; cursor: pointer; 
             background: linear-gradient(45deg, #00ffcc, #0099ff); 
-            border: none; border-radius: 12px; font-weight: bold; color: #000; 
-            transition: 0.3s; text-transform: uppercase;
+            border: none; border-radius: 12px; font-weight: bold; color: #000; transition: 0.3s;
         }
-        button:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,255,204,0.4); background: #fff; }
+        button:hover { transform: scale(1.05); background: #fff; }
 
         .reset-btn { 
-            position: absolute; top: 20px; right: 20px; 
-            background: transparent; color: #ff4444; border: 1px solid #ff4444;
-            padding: 8px 15px; font-size: 12px; border-radius: 8px; z-index: 100;
+            position: absolute; top: 15px; right: 15px; background: transparent; 
+            color: #ff4444; border: 1px solid #ff4444; padding: 6px 12px; 
+            font-size: 10px; border-radius: 6px; z-index: 100; opacity: 0.6;
         }
 
-        .skin-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
-        }
-        .skin-preview { width: 14px; height: 14px; border-radius: 50%; margin-right: 12px; border: 2px solid #fff; }
-        .ability-txt { font-size: 11px; color: #888; display: block; margin-top: 4px; }
+        .skin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .skin-preview { width: 14px; height: 14px; border-radius: 50%; margin-right: 12px; border: 2px solid #fff; display: inline-block; }
+        .ability-txt { font-size: 10px; color: #888; display: block; margin-top: 2px; }
         
-        #game-ui { 
-            position: absolute; top: 30px; left: 30px; font-size: 24px; 
-            font-weight: 300; letter-spacing: 2px; pointer-events: none; z-index: 5; 
-        }
+        #game-ui { position: absolute; top: 20px; left: 20px; font-size: 20px; font-weight: 300; pointer-events: none; z-index: 5; }
         .coin-txt { color: #ffd700; font-weight: bold; }
         .hidden { display: none !important; }
     </style>
@@ -70,24 +60,24 @@
 
     <div id="start-screen" class="overlay">
         <h1>SURVIVAL</h1>
-        <div class="best-score-label">Best Record: <span id="best-score-val">0</span></div>
+        <div class="best-score-label">BEST: <span id="best-score-val">0</span></div>
         
         <div class="board" style="text-align: center;">
             <p style="margin-top:0;">CREDIT: <span class="coin-txt" id="total-coins">0</span> G</p>
-            <input type="text" id="player-name" placeholder="Enter Pilot Name" maxlength="10">
+            <input type="text" id="player-name" placeholder="Pilot Name" maxlength="10">
             <br><button onclick="startGame()">Launch</button>
         </div>
 
         <div class="board">
-            <h3 style="margin-top:0; font-size:14px; color:#888; text-align: center; letter-spacing:2px;">EQUIPMENT SHOP</h3>
+            <h3 style="margin-top:0; font-size:12px; color:#888; text-align: center; letter-spacing:2px;">EQUIPMENT SHOP</h3>
             <div id="skin-list"></div>
         </div>
     </div>
 
     <div id="gameover-screen" class="overlay hidden" style="justify-content: center;">
-        <h1 style="color: #ff4444;">MISSION FAILED</h1>
-        <div class="board" id="result-txt" style="text-align: center; line-height: 2;"></div>
-        <button onclick="showStartScreen()">Return to Base</button>
+        <h1 style="color: #ff4444;">TERMINATED</h1>
+        <div class="board" id="result-txt" style="text-align: center; line-height: 1.8;"></div>
+        <button onclick="showStartScreen()">Return</button>
     </div>
 
     <div id="game-ui" class="hidden">SCORE <span id="current-score" style="font-weight: 900; color:#00ffcc;">0</span></div>
@@ -97,21 +87,18 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     
-    // 背景用パーティクル
     let stars = [];
     function createStars() {
         stars = [];
-        for(let i=0; i<100; i++) {
-            stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5 + 0.1 });
-        }
+        for(let i=0; i<80; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.5, speed: Math.random()*0.4 + 0.1 });
     }
 
     const SKINS = [
         { id: 'default', name: 'BLUE-01', color: '#00ccff', price: 0, desc: 'Standard Unit' },
         { id: 'lemon', name: 'LEMON-02', color: '#ffff00', price: 300, desc: 'Enemy Speed 0.8x' },
-        { id: 'strawberry', name: 'BERRY-03', color: '#ff4444', price: 900, desc: 'Auto-Sentry (Reload: 0.5s)' },
-        { id: 'green', name: 'GREEN-04', color: '#33ff33', price: 1800, desc: 'Auto-Shield (15s cooldown)' },
-        { id: 'galaxy', name: 'PURPLE-05', color: '#cc00ff', price: 3000, desc: 'Double Item Spawn' }
+        { id: 'strawberry', name: 'BERRY-03', color: '#ff4444', price: 900, desc: 'Auto-Shot (Range: 300px)' },
+        { id: 'green', name: 'GREEN-04', color: '#33ff33', price: 1800, desc: 'Shield (15s cool)' },
+        { id: 'galaxy', name: 'PURPLE-05', color: '#cc00ff', price: 3000, desc: '2x Item Spawn Rate' }
     ];
 
     let gameState = {
@@ -122,7 +109,7 @@
     };
 
     let score = 0, isRunning = false, enemies = [], items = [], bullets = [];
-    let player = { x: 0, y: 0, r: 10 };
+    let player = { x: window.innerWidth/2, y: window.innerHeight/2, r: 10 };
     let frameCount = 0, flashOpacity = 0, hasShield = false, shieldTimer = 0;
 
     function init() {
@@ -140,7 +127,7 @@
     }
 
     function resetAllData() {
-        if (confirm("Reset all mission data?")) { localStorage.clear(); location.reload(); }
+        if (confirm("Reset all data?")) { localStorage.clear(); location.reload(); }
     }
 
     function updateUI() {
@@ -153,12 +140,12 @@
             const equipped = gameState.currentSkinId === skin.id;
             sList.innerHTML += `<div class="skin-item">
                 <div>
-                    <span class="skin-preview" style="background:${skin.color}; box-shadow: 0 0 10px ${skin.color}"></span><b>${skin.name}</b>
+                    <span class="skin-preview" style="background:${skin.color}; box-shadow: 0 0 8px ${skin.color}"></span><b>${skin.name}</b>
                     <span class="ability-txt">${skin.desc}</span>
                 </div>
-                ${equipped ? '<button disabled style="background:#333; color:#888; padding:5px 12px; font-size:12px;">ACTIVE</button>' : 
-                  unlocked ? `<button onclick="equipSkin('${skin.id}')" style="padding:5px 12px; font-size:12px;">SELECT</button>` : 
-                  `<button onclick="buySkin('${skin.id}', ${skin.price})" style="padding:5px 12px; font-size:12px;">${skin.price}G</button>`}</div>`;
+                ${equipped ? '<button disabled style="background:#222; color:#555; padding:4px 10px; font-size:11px;">ACTIVE</button>' : 
+                  unlocked ? `<button onclick="equipSkin('${skin.id}')" style="padding:4px 10px; font-size:11px;">SELECT</button>` : 
+                  `<button onclick="buySkin('${skin.id}', ${skin.price})" style="padding:4px 10px; font-size:11px;">${skin.price}G</button>`}</div>`;
         });
     }
 
@@ -171,8 +158,7 @@
     function equipSkin(id) { gameState.currentSkinId = id; saveData(); updateUI(); }
 
     function startGame() {
-        const name = document.getElementById('player-name').value.trim();
-        if (!name) { alert("Please enter Pilot Name."); return; }
+        if (!document.getElementById('player-name').value.trim()) { alert("Enter Pilot Name."); return; }
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('game-ui').classList.remove('hidden');
         score = 0; enemies = []; items = []; bullets = []; frameCount = 0; isRunning = true;
@@ -186,97 +172,59 @@
         updateUI();
     }
 
-    window.addEventListener('mousemove', (e) => { player.x = e.clientX; player.y = e.clientY; });
+    // 操作（マウス & タッチ）
+    function handleMove(nx, ny) { if(isRunning) { player.x = nx; player.y = ny; } }
+    window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    window.addEventListener('touchmove', (e) => { handleMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, { passive: false });
 
     function drawBackground() {
-        // 背景の暗いグラデーション
         ctx.fillStyle = '#050508';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 星の描画
         ctx.fillStyle = "white";
-        stars.forEach(s => {
-            s.y += s.speed;
-            if(s.y > canvas.height) s.y = 0;
-            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
-        });
-
-        // サイバーグリッド
+        stars.forEach(s => { s.y += s.speed; if(s.y > canvas.height) s.y = 0; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); });
         ctx.strokeStyle = "rgba(0, 255, 204, 0.05)";
-        ctx.lineWidth = 1;
-        const gridSize = 50;
-        const offsetX = (player.x * 0.02) % gridSize;
-        const offsetY = (player.y * 0.02) % gridSize;
-
-        for (let x = -offsetX; x < canvas.width; x += gridSize) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-        }
-        for (let y = -offsetY; y < canvas.height; y += gridSize) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-        }
+        const gridSize = 50, offsetX = (player.x * 0.02) % gridSize, offsetY = (player.y * 0.02) % gridSize;
+        for (let x = -offsetX; x < canvas.width; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+        for (let y = -offsetY; y < canvas.height; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
     }
 
     function gameLoop() {
         if (!isRunning) return;
         frameCount++; score++;
         document.getElementById('current-score').innerText = Math.floor(score / 10);
-
         drawBackground();
 
-        const currentSkinId = gameState.currentSkinId;
-        if (currentSkinId === 'green' && !hasShield) {
-            shieldTimer++;
-            if (shieldTimer > 900) { hasShield = true; shieldTimer = 0; }
-        }
+        const curSkin = gameState.currentSkinId;
+        if (curSkin === 'green' && !hasShield && ++shieldTimer > 900) { hasShield = true; shieldTimer = 0; }
 
-        const itemInterval = (currentSkinId === 'galaxy') ? 600 : 1200;
-        if (frameCount % itemInterval === 0) {
-            items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height });
-        }
+        if (frameCount % (curSkin === 'galaxy' ? 600 : 1200) === 0) items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height });
 
-        // アイテム
         items.forEach((it, i) => {
-            ctx.beginPath(); ctx.arc(it.x, it.y, 12, 0, Math.PI*2);
-            ctx.fillStyle = "#ffcc00"; ctx.shadowBlur = 15; ctx.shadowColor = "gold"; ctx.fill(); ctx.shadowBlur = 0;
-            if (Math.sqrt((player.x - it.x)**2 + (player.y - it.y)**2) < 25) { items.splice(i, 1); enemies = []; flashOpacity = 0.5; }
+            ctx.beginPath(); ctx.arc(it.x, it.y, 12, 0, Math.PI*2); ctx.fillStyle = "#ffcc00"; ctx.fill();
+            if (Math.hypot(player.x - it.x, player.y - it.y) < 25) { items.splice(i, 1); enemies = []; flashOpacity = 0.5; }
         });
 
-        // イチゴ攻撃（ナーフ版）
-        if (currentSkinId === 'strawberry' && frameCount % 30 === 0 && enemies.length > 0) {
-            let target = null, minDist = 350;
-            enemies.forEach(e => {
-                let d = Math.sqrt((player.x-e.x)**2 + (player.y-e.y)**2);
-                if(d < minDist) { minDist = d; target = e; }
-            });
+        if (curSkin === 'strawberry' && frameCount % 30 === 0) {
+            let target = null, minDist = 300;
+            enemies.forEach(e => { let d = Math.hypot(player.x-e.x, player.y-e.y); if(d < minDist) { minDist = d; target = e; } });
             if(target) {
-                const dx = target.x - player.x, dy = target.y - player.y, d = Math.sqrt(dx*dx + dy*dy);
-                bullets.push({ x: player.x, y: player.y, vx: (dx/d)*7, vy: (dy/d)*7, life: 60 });
+                const dx = target.x - player.x, dy = target.y - player.y, d = Math.hypot(dx, dy);
+                bullets.push({ x: player.x, y: player.y, vx: (dx/d)*7, vy: (dy/d)*7, life: 50 });
             }
         }
 
-        // 弾
-        ctx.fillStyle = "#00ffcc";
         bullets.forEach((b, i) => {
             b.x += b.vx; b.y += b.vy; b.life--;
-            ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI*2); ctx.fillStyle = "#00ffcc"; ctx.fill();
             if(b.life <= 0) bullets.splice(i, 1);
-            enemies.forEach((e, j) => {
-                if(Math.sqrt((b.x-e.x)**2 + (b.y-e.y)**2) < 15) { enemies.splice(j, 1); bullets.splice(i, 1); }
-            });
+            enemies.forEach((e, j) => { if(Math.hypot(b.x-e.x, b.y-e.y) < 15) { enemies.splice(j, 1); bullets.splice(i, 1); } });
         });
 
-        // プレイヤー
-        const skin = SKINS.find(s => s.id === currentSkinId);
-        if (hasShield) {
-            ctx.beginPath(); ctx.arc(player.x, player.y, player.r + 10, 0, Math.PI*2);
-            ctx.strokeStyle = "#00ff00"; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
-        }
-        ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
-        ctx.fillStyle = skin.color; ctx.shadowBlur = 20; ctx.shadowColor = skin.color; ctx.fill(); ctx.shadowBlur = 0;
+        const skinColor = SKINS.find(s => s.id === curSkin).color;
+        if (hasShield) { ctx.beginPath(); ctx.arc(player.x, player.y, 20, 0, Math.PI*2); ctx.strokeStyle = "#3f3"; ctx.stroke(); }
+        ctx.beginPath(); ctx.arc(player.x, player.y, 10, 0, Math.PI*2); ctx.fillStyle = skinColor; ctx.shadowBlur = 15; ctx.shadowColor = skinColor; ctx.fill(); ctx.shadowBlur = 0;
 
-        // 敵
-        const spawnRate = Math.max(7, 35 - Math.floor(score / 600));
-        if (score % spawnRate === 0) {
+        if (score % Math.max(7, 35 - Math.floor(score/600)) === 0) {
             const side = Math.floor(Math.random()*4);
             let x, y;
             if(side===0){x=Math.random()*canvas.width;y=-20} else if(side===1){x=canvas.width+20;y=Math.random()*canvas.height}
@@ -284,34 +232,24 @@
             enemies.push({ x, y });
         }
         enemies.forEach((e, i) => {
-            const dx = player.x - e.x, dy = player.y - e.y, dist = Math.sqrt(dx*dx + dy*dy);
-            const speed = (2.6 + (score / 3500)) * (currentSkinId === 'lemon' ? 0.8 : 1);
-            e.x += (dx/dist)*speed; e.y += (dy/dist)*speed;
+            const d = Math.hypot(player.x-e.x, player.y-e.y), speed = (2.6 + (score/3500)) * (curSkin === 'lemon' ? 0.8 : 1);
+            e.x += ((player.x-e.x)/d)*speed; e.y += ((player.y-e.y)/d)*speed;
             ctx.beginPath(); ctx.arc(e.x, e.y, 8, 0, Math.PI*2); ctx.fillStyle = '#ff3366'; ctx.fill();
-            if (dist < player.r + 8) {
-                if (hasShield) { hasShield = false; enemies.splice(i, 1); } else { gameOver(); }
-            }
+            if (d < 18) { if (hasShield) { hasShield = false; enemies.splice(i, 1); } else { gameOver(); } }
         });
 
-        if (flashOpacity > 0) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${flashOpacity})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height); flashOpacity -= 0.05;
-        }
+        if (flashOpacity > 0) { ctx.fillStyle = `rgba(255,255,255,${flashOpacity})`; ctx.fillRect(0,0,canvas.width,canvas.height); flashOpacity -= 0.05; }
         requestAnimationFrame(gameLoop);
     }
 
     function gameOver() {
         isRunning = false;
-        const finalScore = Math.floor(score / 10);
-        gameState.totalCoins += finalScore;
-        if (finalScore > gameState.bestScore) gameState.bestScore = finalScore;
+        const fs = Math.floor(score/10);
+        gameState.totalCoins += fs;
+        if (fs > gameState.bestScore) gameState.bestScore = fs;
         saveData();
-        document.getElementById('result-txt').innerHTML = `
-            SCORE: ${finalScore}<br>
-            PERSONAL BEST: ${gameState.bestScore}<br>
-            REWARD: +${finalScore}G`;
-        document.getElementById('game-ui').classList.add('hidden'); 
-        document.getElementById('gameover-screen').classList.remove('hidden');
+        document.getElementById('result-txt').innerHTML = `SCORE: ${fs}<br>BEST: ${gameState.bestScore}<br>CREDIT: +${fs}G`;
+        document.getElementById('game-ui').classList.add('hidden'); document.getElementById('gameover-screen').classList.remove('hidden');
     }
 
     window.addEventListener('resize', init);
