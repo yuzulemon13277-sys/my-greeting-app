@@ -2,161 +2,320 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night City Jumper - Mobile Ready</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survival Escape - Stylish Edition</title>
     <style>
-        body {
-            margin: 0; padding: 0; display: flex; justify-content: center;
-            align-items: center; height: 100vh; background: #02040a;
-            color: white; font-family: 'Segoe UI', sans-serif;
-            overflow: hidden; touch-action: manipulation; /* スマホのダブルタップズームを防止 */
+        body { margin: 0; background: #050508; color: white; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; }
+        canvas { display: block; }
+        
+        /* 全体的にネオン感をプラス */
+        .overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; align-items: center; 
+            background: radial-gradient(circle at center, rgba(10, 20, 40, 0.8) 0%, rgba(5, 5, 10, 0.95) 100%);
+            z-index: 10; overflow-y: auto; padding: 40px 0;
+            backdrop-filter: blur(8px);
         }
-        #game-container {
-            position: relative; width: 100%; max-width: 800px; height: 400px;
-            background: linear-gradient(to bottom, #000814 0%, #001d3d 100%);
-            border-bottom: 12px solid #222; overflow: hidden;
-            box-shadow: 0 0 50px rgba(0,245,212,0.2);
-        }
-
-        .city-bg {
-            position: absolute; bottom: 0; width: 200%; height: 150px;
-            background: repeating-linear-gradient(90deg, #003566 0px, #003566 40px, transparent 40px, transparent 80px);
-            opacity: 0.3; z-index: 1;
-        }
-
-        #player {
-            position: absolute; bottom: 0; left: 50px;
-            width: 40px; height: 40px; background: #00f5d4;
-            border-radius: 8px; box-shadow: 0 0 20px #00f5d4;
-            z-index: 10;
-        }
-        .invincible { background: #fff !important; box-shadow: 0 0 40px #fff, 0 0 60px #ffea00 !important; }
-
-        #obstacle { position: absolute; bottom: 0; z-index: 5; }
-        .car-body { position: relative; width: 70px; height: 35px; background: #ff0055; border-radius: 20px 10px 5px 5px; }
-        .truck-body { position: relative; width: 80px; height: 90px; background: #ff8800; border-radius: 5px; }
-        .window { position: absolute; top: 5px; left: 5px; width: 25px; height: 12px; background: #222; border-radius: 10px 2px 0 0; }
-        .tire { position: absolute; bottom: -8px; width: 15px; height: 15px; background: #111; border-radius: 50%; border: 2px solid #444; }
-        .tire-l { left: 8px; } .tire-r { right: 8px; }
-
-        #item {
-            position: absolute; bottom: 180px; width: 30px; height: 30px; background: #ffea00;
-            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            box-shadow: 0 0 20px #ffea00; z-index: 5;
+        
+        h1 { font-size: 50px; font-weight: 900; letter-spacing: 5px; color: #00ffcc; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
+        .best-score-label { color: #ffcc00; font-size: 18px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .board { 
+            width: 460px; background: rgba(255, 255, 255, 0.03); 
+            padding: 25px; border-radius: 20px; margin-bottom: 25px; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        #ui-layer { position: absolute; top: 10px; left: 15px; z-index: 20; pointer-events: none; }
-        .score-text { font-size: 24px; font-weight: bold; color: #ffea00; margin: 0; }
-        .best-text { font-size: 14px; color: #fff; opacity: 0.6; margin: 0; }
+        input { 
+            padding: 15px; font-size: 18px; border-radius: 12px; 
+            border: 1px solid #333; background: rgba(0,0,0,0.5); color: #fff; 
+            margin-bottom: 20px; width: 300px; text-align: center;
+            transition: 0.3s;
+        }
+        input:focus { border-color: #00ffcc; outline: none; box-shadow: 0 0 15px rgba(0,255,204,0.3); }
+
+        button { 
+            padding: 16px 50px; font-size: 18px; cursor: pointer; 
+            background: linear-gradient(45deg, #00ffcc, #0099ff); 
+            border: none; border-radius: 12px; font-weight: bold; color: #000; 
+            transition: 0.3s; text-transform: uppercase;
+        }
+        button:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,255,204,0.4); background: #fff; }
+
+        .reset-btn { 
+            position: absolute; top: 20px; right: 20px; 
+            background: transparent; color: #ff4444; border: 1px solid #ff4444;
+            padding: 8px 15px; font-size: 12px; border-radius: 8px; z-index: 100;
+        }
+
+        .skin-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
+        .skin-preview { width: 14px; height: 14px; border-radius: 50%; margin-right: 12px; border: 2px solid #fff; }
+        .ability-txt { font-size: 11px; color: #888; display: block; margin-top: 4px; }
+        
+        #game-ui { 
+            position: absolute; top: 30px; left: 30px; font-size: 24px; 
+            font-weight: 300; letter-spacing: 2px; pointer-events: none; z-index: 5; 
+        }
+        .coin-txt { color: #ffd700; font-weight: bold; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="city" class="city-bg"></div>
-        <div id="ui-layer">
-            <p class="score-text">SCORE: <span id="score">0</span> <span id="status" style="font-size: 16px;"></span></p>
-            <p class="best-text">BEST: <span id="best">0</span> | Speed Lv: <span id="lv">1</span></p>
+    <button class="reset-btn" onclick="resetAllData()">RESET DATA</button>
+
+    <div id="start-screen" class="overlay">
+        <h1>SURVIVAL</h1>
+        <div class="best-score-label">Best Record: <span id="best-score-val">0</span></div>
+        
+        <div class="board" style="text-align: center;">
+            <p style="margin-top:0;">CREDIT: <span class="coin-txt" id="total-coins">0</span> G</p>
+            <input type="text" id="player-name" placeholder="Enter Pilot Name" maxlength="10">
+            <br><button onclick="startGame()">Launch</button>
         </div>
-        <div id="player"></div>
-        <div id="obstacle">
-            <div id="obs-body" class="car-body">
-                <div class="window"></div>
-                <div class="tire tire-l"></div>
-                <div class="tire tire-r"></div>
-            </div>
+
+        <div class="board">
+            <h3 style="margin-top:0; font-size:14px; color:#888; text-align: center; letter-spacing:2px;">EQUIPMENT SHOP</h3>
+            <div id="skin-list"></div>
         </div>
-        <div id="item"></div>
     </div>
 
-    <script>
-        const player = document.getElementById("player");
-        const obstacle = document.getElementById("obstacle");
-        const obsBody = document.getElementById("obs-body");
-        const item = document.getElementById("item");
-        const city = document.getElementById("city");
-        const scoreDisplay = document.getElementById("score");
-        const bestDisplay = document.getElementById("best");
-        const lvDisplay = document.getElementById("lv");
-        const statusText = document.getElementById("status");
+    <div id="gameover-screen" class="overlay hidden" style="justify-content: center;">
+        <h1 style="color: #ff4444;">MISSION FAILED</h1>
+        <div class="board" id="result-txt" style="text-align: center; line-height: 2;"></div>
+        <button onclick="showStartScreen()">Return to Base</button>
+    </div>
 
-        let gameActive = true, score = 0, speed = 7, pos = 0, vel = 0, grav = 1.6, jCount = 0, isInv = false;
-        let obsX = 800, itemX = 1500, cityX = 0, isTruck = false;
+    <div id="game-ui" class="hidden">SCORE <span id="current-score" style="font-weight: 900; color:#00ffcc;">0</span></div>
+    <canvas id="game"></canvas>
 
-        // ハイスコアの読み込み
-        let highScore = localStorage.getItem("highScore") || 0;
-        bestDisplay.innerText = highScore;
+<script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    
+    // 背景用パーティクル
+    let stars = [];
+    function createStars() {
+        stars = [];
+        for(let i=0; i<100; i++) {
+            stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5 + 0.1 });
+        }
+    }
 
-        // 【スマホ対応】画面タッチに反応させる
-        window.addEventListener("touchstart", (e) => {
-            handleInput();
-            // e.preventDefault(); // これを入れると他の操作ができなくなる場合があるので注意
-        }, { passive: false });
+    const SKINS = [
+        { id: 'default', name: 'BLUE-01', color: '#00ccff', price: 0, desc: 'Standard Unit' },
+        { id: 'lemon', name: 'LEMON-02', color: '#ffff00', price: 300, desc: 'Enemy Speed 0.8x' },
+        { id: 'strawberry', name: 'BERRY-03', color: '#ff4444', price: 900, desc: 'Auto-Sentry (Reload: 0.5s)' },
+        { id: 'green', name: 'GREEN-04', color: '#33ff33', price: 1800, desc: 'Auto-Shield (15s cooldown)' },
+        { id: 'galaxy', name: 'PURPLE-05', color: '#cc00ff', price: 3000, desc: 'Double Item Spawn' }
+    ];
 
-        // パソコンのクリックとキーボード対応
-        window.addEventListener("mousedown", handleInput);
-        window.addEventListener("keydown", (e) => {
-            if (e.code === "Space") { handleInput(); e.preventDefault(); }
+    let gameState = {
+        totalCoins: parseInt(localStorage.getItem('totalCoins')) || 0,
+        unlockedSkins: JSON.parse(localStorage.getItem('unlockedSkins')) || ['default'],
+        currentSkinId: localStorage.getItem('currentSkin') || 'default',
+        bestScore: parseInt(localStorage.getItem('survivalBestScore')) || 0
+    };
+
+    let score = 0, isRunning = false, enemies = [], items = [], bullets = [];
+    let player = { x: 0, y: 0, r: 10 };
+    let frameCount = 0, flashOpacity = 0, hasShield = false, shieldTimer = 0;
+
+    function init() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        createStars();
+        updateUI();
+    }
+
+    function saveData() {
+        localStorage.setItem('totalCoins', gameState.totalCoins);
+        localStorage.setItem('unlockedSkins', JSON.stringify(gameState.unlockedSkins));
+        localStorage.setItem('currentSkin', gameState.currentSkinId);
+        localStorage.setItem('survivalBestScore', gameState.bestScore);
+    }
+
+    function resetAllData() {
+        if (confirm("Reset all mission data?")) { localStorage.clear(); location.reload(); }
+    }
+
+    function updateUI() {
+        document.getElementById('total-coins').innerText = gameState.totalCoins;
+        document.getElementById('best-score-val').innerText = gameState.bestScore;
+        const sList = document.getElementById('skin-list');
+        sList.innerHTML = "";
+        SKINS.forEach(skin => {
+            const unlocked = gameState.unlockedSkins.includes(skin.id);
+            const equipped = gameState.currentSkinId === skin.id;
+            sList.innerHTML += `<div class="skin-item">
+                <div>
+                    <span class="skin-preview" style="background:${skin.color}; box-shadow: 0 0 10px ${skin.color}"></span><b>${skin.name}</b>
+                    <span class="ability-txt">${skin.desc}</span>
+                </div>
+                ${equipped ? '<button disabled style="background:#333; color:#888; padding:5px 12px; font-size:12px;">ACTIVE</button>' : 
+                  unlocked ? `<button onclick="equipSkin('${skin.id}')" style="padding:5px 12px; font-size:12px;">SELECT</button>` : 
+                  `<button onclick="buySkin('${skin.id}', ${skin.price})" style="padding:5px 12px; font-size:12px;">${skin.price}G</button>`}</div>`;
+        });
+    }
+
+    function buySkin(id, price) {
+        if (gameState.totalCoins >= price) {
+            gameState.totalCoins -= price; gameState.unlockedSkins.push(id);
+            saveData(); updateUI();
+        } else { alert("Insufficient Credits."); }
+    }
+    function equipSkin(id) { gameState.currentSkinId = id; saveData(); updateUI(); }
+
+    function startGame() {
+        const name = document.getElementById('player-name').value.trim();
+        if (!name) { alert("Please enter Pilot Name."); return; }
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-ui').classList.remove('hidden');
+        score = 0; enemies = []; items = []; bullets = []; frameCount = 0; isRunning = true;
+        hasShield = (gameState.currentSkinId === 'green'); shieldTimer = 0;
+        gameLoop();
+    }
+
+    function showStartScreen() {
+        document.getElementById('gameover-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+        updateUI();
+    }
+
+    window.addEventListener('mousemove', (e) => { player.x = e.clientX; player.y = e.clientY; });
+
+    function drawBackground() {
+        // 背景の暗いグラデーション
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 星の描画
+        ctx.fillStyle = "white";
+        stars.forEach(s => {
+            s.y += s.speed;
+            if(s.y > canvas.height) s.y = 0;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
         });
 
-        function handleInput() { if (gameActive && jCount < 2) { vel = 24; jCount++; } }
+        // サイバーグリッド
+        ctx.strokeStyle = "rgba(0, 255, 204, 0.05)";
+        ctx.lineWidth = 1;
+        const gridSize = 50;
+        const offsetX = (player.x * 0.02) % gridSize;
+        const offsetY = (player.y * 0.02) % gridSize;
 
-        function update() {
-            if (!gameActive) return;
-
-            // 1. 物理計算
-            vel -= grav; pos += vel;
-            if (pos <= 0) { pos = 0; vel = 0; jCount = 0; }
-            player.style.bottom = pos + "px";
-            player.style.transform = `rotate(${pos * 2.5}deg)`;
-
-            // 2. 障害物移動
-            obsX -= speed;
-            if (obsX < -100) {
-                obsX = 800;
-                score++;
-                if (score > 0 && score % 10 === 0) speed += 2;
-                isTruck = Math.random() < 0.3;
-                obsBody.className = isTruck ? "truck-body" : "car-body";
-            }
-            obstacle.style.left = obsX + "px";
-
-            // 3. 背景移動
-            cityX -= speed * 0.5;
-            city.style.transform = `translateX(${(cityX % 80)}px)`;
-
-            // 4. アイテム移動
-            itemX -= speed;
-            if (itemX < -100) itemX = 2500 + Math.random() * 2000;
-            item.style.left = itemX + "px";
-
-            // 5. アイテム判定
-            if (itemX > 50 && itemX < 90 && Math.abs(pos - 180) < 50) {
-                isInv = true; player.classList.add("invincible"); statusText.innerText = "⚡MUTEKI⚡";
-                itemX = -500;
-                setTimeout(() => { isInv = false; player.classList.remove("invincible"); statusText.innerText = ""; }, 5000);
-            }
-
-            // 6. 衝突判定
-            let h = isTruck ? 90 : 35;
-            if (obsX > 40 && obsX < 110 && pos < h && !isInv) {
-                gameActive = false;
-                // ハイスコア更新
-                if (score > highScore) {
-                    localStorage.setItem("highScore", score);
-                    alert("NEW RECORD! 🎉\nSCORE: " + score);
-                } else {
-                    alert("GAME OVER!\nSCORE: " + score);
-                }
-                location.reload();
-            }
-
-            // UI更新
-            scoreDisplay.innerText = score;
-            lvDisplay.innerText = Math.floor((speed - 7) / 2) + 1;
-            requestAnimationFrame(update);
+        for (let x = -offsetX; x < canvas.width; x += gridSize) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         }
-        update();
-    </script>
+        for (let y = -offsetY; y < canvas.height; y += gridSize) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+    }
+
+    function gameLoop() {
+        if (!isRunning) return;
+        frameCount++; score++;
+        document.getElementById('current-score').innerText = Math.floor(score / 10);
+
+        drawBackground();
+
+        const currentSkinId = gameState.currentSkinId;
+        if (currentSkinId === 'green' && !hasShield) {
+            shieldTimer++;
+            if (shieldTimer > 900) { hasShield = true; shieldTimer = 0; }
+        }
+
+        const itemInterval = (currentSkinId === 'galaxy') ? 600 : 1200;
+        if (frameCount % itemInterval === 0) {
+            items.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height });
+        }
+
+        // アイテム
+        items.forEach((it, i) => {
+            ctx.beginPath(); ctx.arc(it.x, it.y, 12, 0, Math.PI*2);
+            ctx.fillStyle = "#ffcc00"; ctx.shadowBlur = 15; ctx.shadowColor = "gold"; ctx.fill(); ctx.shadowBlur = 0;
+            if (Math.sqrt((player.x - it.x)**2 + (player.y - it.y)**2) < 25) { items.splice(i, 1); enemies = []; flashOpacity = 0.5; }
+        });
+
+        // イチゴ攻撃（ナーフ版）
+        if (currentSkinId === 'strawberry' && frameCount % 30 === 0 && enemies.length > 0) {
+            let target = null, minDist = 350;
+            enemies.forEach(e => {
+                let d = Math.sqrt((player.x-e.x)**2 + (player.y-e.y)**2);
+                if(d < minDist) { minDist = d; target = e; }
+            });
+            if(target) {
+                const dx = target.x - player.x, dy = target.y - player.y, d = Math.sqrt(dx*dx + dy*dy);
+                bullets.push({ x: player.x, y: player.y, vx: (dx/d)*7, vy: (dy/d)*7, life: 60 });
+            }
+        }
+
+        // 弾
+        ctx.fillStyle = "#00ffcc";
+        bullets.forEach((b, i) => {
+            b.x += b.vx; b.y += b.vy; b.life--;
+            ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI*2); ctx.fill();
+            if(b.life <= 0) bullets.splice(i, 1);
+            enemies.forEach((e, j) => {
+                if(Math.sqrt((b.x-e.x)**2 + (b.y-e.y)**2) < 15) { enemies.splice(j, 1); bullets.splice(i, 1); }
+            });
+        });
+
+        // プレイヤー
+        const skin = SKINS.find(s => s.id === currentSkinId);
+        if (hasShield) {
+            ctx.beginPath(); ctx.arc(player.x, player.y, player.r + 10, 0, Math.PI*2);
+            ctx.strokeStyle = "#00ff00"; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+        }
+        ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
+        ctx.fillStyle = skin.color; ctx.shadowBlur = 20; ctx.shadowColor = skin.color; ctx.fill(); ctx.shadowBlur = 0;
+
+        // 敵
+        const spawnRate = Math.max(7, 35 - Math.floor(score / 600));
+        if (score % spawnRate === 0) {
+            const side = Math.floor(Math.random()*4);
+            let x, y;
+            if(side===0){x=Math.random()*canvas.width;y=-20} else if(side===1){x=canvas.width+20;y=Math.random()*canvas.height}
+            else if(side===2){x=Math.random()*canvas.width;y=canvas.height+20} else {x=-20;y=Math.random()*canvas.height}
+            enemies.push({ x, y });
+        }
+        enemies.forEach((e, i) => {
+            const dx = player.x - e.x, dy = player.y - e.y, dist = Math.sqrt(dx*dx + dy*dy);
+            const speed = (2.6 + (score / 3500)) * (currentSkinId === 'lemon' ? 0.8 : 1);
+            e.x += (dx/dist)*speed; e.y += (dy/dist)*speed;
+            ctx.beginPath(); ctx.arc(e.x, e.y, 8, 0, Math.PI*2); ctx.fillStyle = '#ff3366'; ctx.fill();
+            if (dist < player.r + 8) {
+                if (hasShield) { hasShield = false; enemies.splice(i, 1); } else { gameOver(); }
+            }
+        });
+
+        if (flashOpacity > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${flashOpacity})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height); flashOpacity -= 0.05;
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+        isRunning = false;
+        const finalScore = Math.floor(score / 10);
+        gameState.totalCoins += finalScore;
+        if (finalScore > gameState.bestScore) gameState.bestScore = finalScore;
+        saveData();
+        document.getElementById('result-txt').innerHTML = `
+            SCORE: ${finalScore}<br>
+            PERSONAL BEST: ${gameState.bestScore}<br>
+            REWARD: +${finalScore}G`;
+        document.getElementById('game-ui').classList.add('hidden'); 
+        document.getElementById('gameover-screen').classList.remove('hidden');
+    }
+
+    window.addEventListener('resize', init);
+    init();
+</script>
 </body>
 </html>
